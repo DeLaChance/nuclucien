@@ -1,0 +1,15 @@
+-A INPUT -p tcp -m tcp --dport 5353 -j ACCEPT
+-A INPUT -p udp -m udp --dport 5353 -j ACCEPT
+-A INPUT -p tcp -m tcp -m multiport --dports 8080,8081,8082 -j ACCEPT
+-A INPUT -s 8.8.8.8/32 -p udp -j ACCEPT
+-A INPUT -s 8.8.8.8/32 -p tcp -m tcp -j ACCEPT
+-A INPUT -s 10.0.0.242/32 -p tcp -m tcp -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -p udp -m udp --dport 53 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 53 -j ACCEPT
+-A INPUT -s 192.168.0.0/24 -p tcp -m tcp --dport 2224 -j ACCEPT
+-A INPUT -s 192.168.1.0/24 -p tcp -m tcp --dport 2224 -j ACCEPT
+-A INPUT -p tcp -m state --state ESTABLISHED -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 443 -m state --state ESTABLISHED -j ACCEPT
+-A INPUT -j DROP

@@ -1,0 +1,26 @@
+# Set default policies for INPUT, FORWARD, and OUTPUT chains to DROP
+# This means all traffic is blocked by default unless explicitly allowed
+-P FORWARD DROP
+-P OUTPUT DROP
+
+# Allow incoming traffic that is related to established connections
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+# Allow all traffic on the loopback interface
+-A INPUT -i lo -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+# Allow all incoming traffic on tun interfaces
+-A INPUT -i tun+ -j ACCEPT
+-A OUTPUT -o tun+ -j ACCEPT
+# Allow connections to PIA servers
+-A OUTPUT -d 209.222.18.222/32 -j ACCEPT
+-A OUTPUT -d 209.222.18.218/32 -j ACCEPT
+# allow VPN establishing
+-A OUTPUT -p udp -m udp --dport 1197 -j ACCEPT
+# allow local connections
+-A INPUT -s 192.168.0.0/24 -j ACCEPT
+-A OUTPUT -d 192.168.0.0/24 -j ACCEPT
+# Reject all other outgoing traffic with an ICMP net unreachable message; catches any traffic not matched by previous rules
+-A OUTPUT -j REJECT --reject-with icmp-net-unreachable
+
+# Commit the changes to iptables
+COMMIT

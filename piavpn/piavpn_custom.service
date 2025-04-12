@@ -1,0 +1,8 @@
+[Unit]
+Description=Starts Pia VPN
+
+[Service]
+ExecStart=/etc/private-internet-access/piactl_startup.sh
+
+[Install]
+WantedBy=multi-user.target 
