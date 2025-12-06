@@ -16,6 +16,21 @@ services:
       - 6881:6881
       - 6881:6881/udp
     restart: unless-stopped
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - WEBUI_PORT=8123
+      - TZ=Etc/UTC
+      - VERSION=docker
+    volumes:
+      - /etc/plex/library:/config
+      - /home/lucien/media/tv-series:/tv
+      - /home/lucien/media/movies:/movies
+    restart: unless-stopped      
   web:
     image: nginx
     volumes:
