@@ -10,7 +10,7 @@ services:
       - TORRENTING_PORT=6881
     volumes:
       - /home/lucien/config:/config
-      - /home/lucien/Downloads:/downloads #optional
+      - /data/torrents/downloads/:/downloads
     ports:
       - 8080:8080
       - 6881:6881
@@ -28,14 +28,39 @@ services:
       - VERSION=docker
     volumes:
       - /etc/plex/library:/config
-      - /home/lucien/media/tv-series:/tv
-      - /home/lucien/media/movies:/movies
+      - /data/media/tv/:/tv
+      - /data/media/movies:/movies
     restart: unless-stopped      
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /home/lucien/sonarr/:/config
+      - /data/:/data
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /home/lucien/prowlarr/data:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped    
   web:
     image: nginx
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
-      - /home/lucien/Downloads:/var/www/
+      - /data/:/var/www/
     ports:
       - "8081:80"
     environment:
