@@ -1,0 +1,14 @@
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    restart: unless-stopped
+    network_mode: host
+    # Add these lines below:
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - /home/lucien/homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro  # CRITICAL: Gives container access to host system bluetooth logs

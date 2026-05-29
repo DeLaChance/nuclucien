@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-config-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plex-deployment
+  namespace: default
+  labels:
+    app: plex
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: plex
+  template:
+    metadata:
+      labels:
+        app: plex
+    spec:
+      containers:
+        - name: plex
+          image: plexinc/pms-docker:latest
+          env:
+            - name: TZ
+              value: "Europe/Amsterdam" # Change to your local timezone
+            - name: PLEX_CLAIM
+              valueFrom:
+                secretKeyRef:
+                  name: plex-secrets
+                  key: plex-claim
+            - name: PUID
+              value: "1000" # Ensure this matches your storage file permissions
+            - name: PGID
+              value: "1000"
+          ports:
+            - containerPort: 32400
+              name: pms-port
+          volumeMounts:
+            - name: plex-config
+              mountPath: /config
+            - name: media-storage
+              mountPath: /data # This is where Plex will look for your movies/TV shows
+            - name: transcode-space
+              mountPath: /transcode
+      volumes:
+        - name: plex-config
+          persistentVolumeClaim:
+            claimName: plex-config-pvc
+        - name: media-storage
+          persistentVolumeClaim:
+            claimName: media-pvc # Change this to match Sonarr's download/media PVC
+        - name: transcode-space
+          emptyDir:
+            medium: Memory # Performs video transcoding inside RAM instead of wearing out your SSD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plex-service
+  namespace: default
+spec:
+  type: LoadBalancer
+  selector:
+    app: plex
+  ports:
+    - name: pms
+      port: 32400
+      targetPort: 32400
+      protocol: TCP

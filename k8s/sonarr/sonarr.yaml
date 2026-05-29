@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr
+  namespace: default
+  labels:
+    app: sonarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sonarr
+  template:
+    metadata:
+      labels:
+        app: sonarr
+    spec:
+      containers:
+        - name: sonarr
+          image: lscr.io/linuxserver/sonarr:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "Etc/UTC"
+          ports:
+            - name: webui
+              containerPort: 8989
+              protocol: TCP
+          volumeMounts:
+            - name: sonarr-volume
+              mountPath: /config
+              subPath: config/sonarr
+            - name: sonarr-volume
+              mountPath: /downloads
+              subPath: downloads # 👈 Maps to the 'downloads' subfolder in your qBittorrent directory
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+      volumes:
+        - name: sonarr-volume
+          persistentVolumeClaim:
+            claimName: media-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr-service
+  namespace: default
+spec:
+  type: LoadBalancer
+  selector:
+    app: sonarr
+  ports:
+    - name: webui
+      port: 8989
+      targetPort: 8989
+      protocol: TCP

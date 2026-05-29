@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prowlarr
+  namespace: default
+  labels:
+    app: prowlarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # Prevents database lock issues during restarts
+  selector:
+    matchLabels:
+      app: prowlarr
+  template:
+    metadata:
+      labels:
+        app: prowlarr
+    spec:
+      containers:
+        - name: prowlarr
+          image: lscr.io/linuxserver/prowlarr:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "Etc/UTC"
+          ports:
+            - name: webui
+              containerPort: 9696
+              protocol: TCP
+          volumeMounts:
+            - name: prowlarr-storage
+              mountPath: /config
+              subPath: config/prowlarr
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+      volumes:
+        - name: prowlarr-storage
+          persistentVolumeClaim:
+            claimName: media-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prowlarr-service
+  namespace: default
+spec:
+  type: LoadBalancer # Utilizes K3s Klipper LB to bind directly to host port 9696
+  selector:
+    app: prowlarr
+  ports:
+    - name: webui
+      port: 9696
+      targetPort: 9696
+      protocol: TCP
